@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>MixerCompanionDesk</RootNamespace>
+    <AssemblyName>MixerCompanionDesk</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MixerCompanionDesk.Core\MixerCompanionDesk.Core.csproj" />
+    <ProjectReference Include="..\MixerCompanionDesk.Audio\MixerCompanionDesk.Audio.csproj" />
+    <ProjectReference Include="..\MixerCompanionDesk.Storage\MixerCompanionDesk.Storage.csproj" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+</Project>
