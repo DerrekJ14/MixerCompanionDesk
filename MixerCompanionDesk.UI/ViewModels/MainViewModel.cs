@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MixerCompanionDesk.Core.Interfaces;
@@ -15,12 +16,17 @@ public partial class MainViewModel : ObservableObject
     private readonly IAudioService _audioService;
     private readonly ISettingsService _settingsService;
     private readonly IAudioRoutingService _audioRoutingService;
+    private readonly SemaphoreSlim _settingsSaveLock = new(1, 1);
     private bool _isLoading;
+    private bool _saveRequested;
+    private Task? _saveTask;
 
     public ObservableCollection<AudioDevice> PlaybackDevices { get; } = [];
     public ObservableCollection<AudioDevice> RecordingDevices { get; } = [];
     public ObservableCollection<AudioChannel> MixerChannels { get; } = [];
     public ObservableCollection<AudioRoute> Routes { get; } = [];
+    public ObservableCollection<MixerChannel> DemoChannels { get; } = [];
+    public ObservableCollection<ChannelStripViewModel> ControlSurfaceChannels { get; } = [];
 
     [ObservableProperty]
     private AudioDevice? selectedPlaybackDevice;
@@ -54,6 +60,8 @@ public partial class MainViewModel : ObservableObject
         _audioService = audioService;
         _settingsService = settingsService;
         _audioRoutingService = audioRoutingService;
+
+        BuildDemoChannels();
         RefreshRoutingState();
     }
 
@@ -62,8 +70,30 @@ public partial class MainViewModel : ObservableObject
         await LoadSettingsAsync().ConfigureAwait(true);
     }
 
+    private void BuildDemoChannels()
+    {
+        DemoChannels.Clear();
+        ControlSurfaceChannels.Clear();
+
+        var channelDefinitions = new[]
+        {
+            new MixerChannel { Name = "Mic", Level = 72, IsMuted = false, IsSolo = false },
+            new MixerChannel { Name = "Game", Level = 88, IsMuted = false, IsSolo = false },
+            new MixerChannel { Name = "Music", Level = 64, IsMuted = false, IsSolo = false },
+            new MixerChannel { Name = "Browser", Level = 48, IsMuted = false, IsSolo = false }
+        };
+
+        foreach (MixerChannel channel in channelDefinitions)
+        {
+            DemoChannels.Add(channel);
+            ControlSurfaceChannels.Add(new ChannelStripViewModel(channel));
+        }
+    }
+
     private void RefreshRoutingState()
     {
+        var selectedChannelId = SelectedChannel?.Id;
+
         MixerChannels.Clear();
         foreach (AudioChannel channel in _audioRoutingService.GetChannels())
         {
@@ -75,6 +105,10 @@ public partial class MainViewModel : ObservableObject
         {
             Routes.Add(route);
         }
+
+        SelectedChannel = selectedChannelId is not null
+            ? MixerChannels.FirstOrDefault(channel => channel.Id == selectedChannelId)
+            : null;
 
         SelectedChannel ??= MixerChannels.FirstOrDefault();
         if (SelectedChannel is not null)
@@ -103,7 +137,6 @@ public partial class MainViewModel : ObservableObject
         }
 
         SelectedChannel.Level = Math.Clamp(value, 0, 100);
-        RefreshRoutingState();
     }
 
     partial void OnChannelMutedChanged(bool value)
@@ -114,7 +147,6 @@ public partial class MainViewModel : ObservableObject
         }
 
         SelectedChannel.IsMuted = value;
-        RefreshRoutingState();
     }
 
     [RelayCommand]
@@ -220,6 +252,29 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private void RequestSettingsSave()
+    {
+        if (_isLoading || Application.Current is null)
+        {
+            return;
+        }
+
+        _saveRequested = true;
+        if (_saveTask is { IsCompleted: false })
+        {
+            return;
+        }
+
+        _saveTask = Task.Run(async () =>
+        {
+            while (_saveRequested)
+            {
+                _saveRequested = false;
+                await Application.Current.Dispatcher.InvokeAsync(async () => await SaveSettingsAsync().ConfigureAwait(true)).Task.ConfigureAwait(false);
+            }
+        });
+    }
+
     [RelayCommand]
     private async Task SaveSettingsAsync()
     {
@@ -228,8 +283,23 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        await _settingsService.Save(CreateSettings()).ConfigureAwait(true);
-        StatusText = "Settings saved.";
+        await _settingsSaveLock.WaitAsync().ConfigureAwait(true);
+        try
+        {
+            await _settingsService.Save(CreateSettings()).ConfigureAwait(true);
+
+            if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
+            {
+                await dispatcher.InvokeAsync(() => StatusText = "Settings saved.");
+                return;
+            }
+
+            StatusText = "Settings saved.";
+        }
+        finally
+        {
+            _settingsSaveLock.Release();
+        }
     }
 
     [RelayCommand]
@@ -273,7 +343,7 @@ public partial class MainViewModel : ObservableObject
         try
         {
             _audioService.SetMasterVolume((float)(value / 100));
-            _ = SaveSettingsAsync();
+            RequestSettingsSave();
         }
         catch (InvalidOperationException ex)
         {
@@ -285,7 +355,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (!_isLoading)
         {
-            _ = SaveSettingsAsync();
+            RequestSettingsSave();
         }
     }
 
@@ -293,7 +363,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (!_isLoading)
         {
-            _ = SaveSettingsAsync();
+            RequestSettingsSave();
         }
     }
 

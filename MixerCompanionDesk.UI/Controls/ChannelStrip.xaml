@@ -1,0 +1,61 @@
+<UserControl x:Class="MixerCompanionDesk.UI.Controls.ChannelStrip"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="200"
+             Height="220"
+             Background="#1C232D">
+    <Border Background="#1C232D"
+            BorderBrush="#2E3945"
+            BorderThickness="1"
+            CornerRadius="10"
+            Margin="8">
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="{Binding Name, FallbackValue=Mic}"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="#F4F8FB"
+                       Margin="0,0,0,10" />
+
+            <Slider Grid.Row="1"
+                    Minimum="0"
+                    Maximum="100"
+                    Value="{Binding Level, FallbackValue=72}"
+                    Margin="0,0,0,8"
+                    Foreground="#00C853" />
+
+            <TextBlock Grid.Row="2"
+                       Text="{Binding Level, StringFormat={}{0:0}%, FallbackValue=72%}"
+                       Foreground="#A8B5C1"
+                       FontSize="12"
+                       Margin="0,0,0,8" />
+
+            <StackPanel Grid.Row="3"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,8">
+                <Button Content="Mute"
+                        Width="52"
+                        Margin="0,0,6,0"
+                        Command="{Binding MuteCommand}" />
+                <Button Content="Solo"
+                        Width="52"
+                        Command="{Binding SoloCommand}" />
+            </StackPanel>
+
+            <Button Grid.Row="4"
+                    Content="Reset"
+                    Width="110"
+                    HorizontalAlignment="Center"
+                    Command="{Binding ResetLevelCommand}" />
+        </Grid>
+    </Border>
+</UserControl>

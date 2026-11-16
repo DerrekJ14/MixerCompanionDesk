@@ -32,28 +32,6 @@ The long-term direction includes:
 
 ## Solution Structure
 
-```text
-MixerCompanionDesk/
-├── MixerCompanionDesk.slnx
-├── README.md
-├── MixerCompanionDesk.Core/
-│   ├── Interfaces/
-│   └── Models/
-├── MixerCompanionDesk.Audio/
-│   └── Services/
-├── MixerCompanionDesk.Storage/
-│   └── Services/
-├── MixerCompanionDesk.UI/
-│   ├── Resources/
-│   ├── ViewModels/
-│   ├── Views/
-│   ├── App.xaml
-│   └── App.xaml.cs
-├── MixerCompanionDesk.Tests/
-│   └── ...
-└── MixerCompanionDesk/
-	└── legacy project entry preserved during transition
-```
 
 ## Projects
 

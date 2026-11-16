@@ -59,6 +59,75 @@ The dependency direction is controlled by Clean Architecture:
 - business logic does not live in the views
 - interface contracts drive implementation choices
 
+## Repository and Solution Roots
+
+- Repository Root: G:\CodeLibrary\MixerCompanionDesk
+- Solution File: G:\CodeLibrary\MixerCompanionDesk\MixerCompanionDesk.slnx
+
+All source code changes must occur under the repository root. Generated folders such as `bin/`, `obj/`, and `.vs/` are not source roots and should not be treated as project locations.
+
+## Current Source Structure
+
+```text
+G:\CodeLibrary\MixerCompanionDesk
+├── .gitignore
+├── .gitattributes
+├── README.md
+├── MixerCompanionDesk.slnx
+├── docs/
+│   ├── architecture.md
+│   ├── roadmap.md
+│   └── technical-design.md
+├── MixerCompanionDesk.Core/
+│   ├── MixerCompanionDesk.Core.csproj
+│   ├── Interfaces/
+│   │   ├── IAudioRoutingService.cs
+│   │   ├── IAudioService.cs
+│   │   └── ISettingsService.cs
+│   └── Models/
+│       ├── ApplicationSettings.cs
+│       ├── AudioChannel.cs
+│       ├── AudioDevice.cs
+│       ├── AudioRoute.cs
+│       └── MixerChannel.cs
+├── MixerCompanionDesk.Audio/
+│   ├── MixerCompanionDesk.Audio.csproj
+│   └── Services/
+│       ├── AudioRoutingService.cs
+│       └── AudioService.cs
+├── MixerCompanionDesk.Storage/
+│   ├── MixerCompanionDesk.Storage.csproj
+│   └── Services/
+│       └── SettingsService.cs
+├── MixerCompanionDesk.UI/
+│   ├── MixerCompanionDesk.UI.csproj
+│   ├── App.xaml
+│   ├── App.xaml.cs
+│   ├── Controls/
+│   │   └── ChannelStrip.xaml
+│   ├── Resources/
+│   │   └── DarkTheme.xaml
+│   ├── ViewModels/
+│   │   ├── ChannelStripViewModel.cs
+│   │   └── MainViewModel.cs
+│   └── Views/
+│       └── MainWindow.xaml
+└── MixerCompanionDesk.Tests/
+    ├── MixerCompanionDesk.Tests.csproj
+    └── CoreModelTests.cs
+```
+
+## File Creation Guardrails
+
+Before creating new files, always perform the following checks:
+
+- Identify the active repository root and solution file.
+- Confirm the target file belongs to an existing project under the repository root.
+- Verify the target file is included in the corresponding `.csproj`.
+- Report the exact path being modified.
+- Do not create duplicate files in alternate directory trees.
+- Do not add source files under generated folders such as `bin/`, `obj/`, or `.vs/`.
+
 ## DI Composition Root
 
 Dependency injection is configured in the WPF `App` class using `Host.CreateDefaultBuilder()`. This keeps the app startup configuration centralized and makes services replaceable.
@@ -114,3 +183,15 @@ This architecture supports a gradual expansion into:
 - low-coupling, interface-driven implementation
 - grounded in a proper digital audio workstation mental model
 - scalable from a device manager to a professional control surface
+
+
+## Source File Creation Rules
+
+Before creating or modifying any file:
+
+- Identify the active solution file.
+- Identify the owning project (*.csproj).
+- Identify the physical folder containing that project.
+- Report the full file path that will be modified.
+- Verify the path is under the active solution root.
+- Never create source files based on inferred paths. Always verify the target path exists in the active project structure.
